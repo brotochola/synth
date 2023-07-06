@@ -1,0 +1,431 @@
+<!-- saved from url=(0028)https://pixeloide.com/sinte/ -->
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="bootstrap.min.css">
+
+    <style>
+        .modulo {
+            width: 500px;
+            min-height: 218px;
+            border: 1px solid black;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 13px;
+            display: block;
+            margin: 5px;
+            position: relative;
+
+        }
+
+        input[type="checkbox"] {
+            height: 19px;
+            width: 16px;
+        }
+    </style>
+    <script src="Tone.js"></script>
+    <script src="jquery-3.0.0.js"></script>
+</head>
+
+<body onload="bodyLoad()">
+
+
+
+    <div id="bata" class="modulo">
+        <input type="number" value="120" id="bpm">
+        <button onclick="arrancarBata()" id="playCajaRitmo"> play</button>
+        <button onclick="bajarRitmo()" id="playCajaRitmo"> bajar ritmo</button>
+
+        <button onclick="cargarRitmo()" id="playCajaRitmo"> cargar ritmo</button>
+
+        <div class="row">
+            <div class="col-3"> crash:<br>
+                hihat Abierto: <br>
+                hihat cerrado:<br>
+                hihat ATR:<br>
+
+                clap<br>
+                redo<br>
+                bombo<br>
+
+            </div>
+
+
+            <div class="col-9">
+                <div class="cuerpo crash"> <input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"></div>
+                <div class="cuerpo hihatA"> <input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"></div>
+                <div class="cuerpo hihatC"> <input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"></div>
+                <div class="cuerpo hihatATR"> <input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"></div>
+                <div class="cuerpo clap"> <input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"></div>
+                <div class="cuerpo redo"> <input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"></div>
+                <div class="cuerpo bombo"> <input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"><input type="checkbox"><input type="checkbox"><input type="checkbox"><input
+                        type="checkbox"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modulo">
+
+        <div class="botonera">
+            <button onclick="notaSampler(&#39;C3&#39;, 5)"> C3</button>
+            <button onclick="notaSampler(&#39;E2&#39;, 5)"> E2</button>
+            <button onclick="notaSampler(&#39;C2&#39;,5)"> C2</button>
+
+        </div>
+
+        freq:<input type="range" id="freq" min="-1500" max="3000" step="0.1"
+            onmousemove="lowPass.frequency.input.value=this.value">
+
+
+        q:<input type="range" id="q" min="0" max="20" step="0.01" onmousemove="lowPass.Q.input.value=this.value">
+
+        LFO freq:<input type="range" id="q" min="0" max="100" value="0" step="0.01"
+            onmousemove="lfo.frequency.input.value=this.value">
+    </div>
+
+
+
+
+    <script>
+        var gamepad = null;
+        let cualJoystick = 0;
+        var playinCaja = false;
+        var cont = 0;
+        var beat = 0;
+        var bata = null;
+        var cajaRitmo = { "bombo": [], "redo": [], "hihatC": [], "hihatA": [], "crash": [], "clap": [], "hihatATR": [] }
+
+
+        function agarrarDataCheckboxes() {
+
+            for (let i = 0; i < $(".cuerpo.bombo input").length; i++) {
+                cajaRitmo["bombo"][i] = $(".cuerpo.bombo input")[i].checked
+            }
+
+            for (let i = 0; i < $(".cuerpo.redo input").length; i++) {
+                cajaRitmo["redo"][i] = $(".cuerpo.redo input")[i].checked
+            }
+
+            for (let i = 0; i < $(".cuerpo.hihatC input").length; i++) {
+                cajaRitmo["hihatC"][i] = $(".cuerpo.hihatC input")[i].checked
+            }
+            for (let i = 0; i < $(".cuerpo.hihatA input").length; i++) {
+                cajaRitmo["hihatA"][i] = $(".cuerpo.hihatA input")[i].checked
+            }
+
+            for (let i = 0; i < $(".cuerpo.crash input").length; i++) {
+                cajaRitmo["crash"][i] = $(".cuerpo.crash input")[i].checked
+            }
+
+            for (let i = 0; i < $(".cuerpo.clap input").length; i++) {
+                cajaRitmo["clap"][i] = $(".cuerpo.clap input")[i].checked
+            }
+            for (let i = 0; i < $(".cuerpo.hihatATR input").length; i++) {
+                cajaRitmo["hihatATR"][i] = $(".cuerpo.hihatATR input")[i].checked
+            }
+
+        }
+
+        function arrancarBata() {
+
+
+            cont = 0;
+            beat = 1;
+            playinCaja = !playinCaja;
+            if (playinCaja) {
+                Tone.Transport.start()
+                $("#playCajaRitmo").html("stop")
+            }
+            else {
+                $("#playCajaRitmo").html("play");
+                Tone.Transport.stop()
+            }
+
+
+        }
+
+        let lastNow = Date.now()
+        function clockBeat(time) {
+            Tone.Transport.bpm.value = parseInt(document.getElementById("bpm").value)
+            //  console.log(Date.now()-lastNow)
+            lastNow = Date.now()
+
+            let cantBeatsPorSegundo = Tone.Transport.bpm.value / 60
+            let duracionBeat = 1000 / cantBeatsPorSegundo
+            let trip = duracionBeat / 12;
+
+            beat = cont % 16;
+            //  console.log(cont, beat)
+            cont++
+            agarrarDataCheckboxes()
+            if (cajaRitmo["bombo"][beat]) tocarBombo()
+            if (cajaRitmo["redo"][beat]) tocarRedo()
+            if (cajaRitmo["clap"][beat]) tocarClap()
+            if (cajaRitmo["hihatATR"][beat]) {
+
+                tocarHihatC()
+                setTimeout(tocarHihatC, trip)
+                setTimeout(tocarHihatC, trip * 2)
+                setTimeout(tocarHihatC, trip * 3)
+                setTimeout(tocarHihatC, trip * 4)
+                setTimeout(tocarHihatC, trip * 5)
+
+
+            }
+            if (cajaRitmo["hihatC"][beat]) tocarHihatC()
+            if (cajaRitmo["hihatA"][beat]) tocarHihatA()
+            if (cajaRitmo["crash"][beat]) tocarCrash()
+
+
+        }
+
+        function tocarHihatA() {
+            bata.triggerAttackRelease("G3", 1);
+        }
+        function tocarHihatC() {
+            bata.triggerAttackRelease("F3", 1);
+        }
+
+        function tocarClap() {
+            bata.triggerAttackRelease("E3", 1);
+        }
+
+        function tocarBombo() {
+            bata.triggerAttackRelease("C3", 1);
+        }
+        function tocarRedo() {
+            bata.triggerAttackRelease("D3", 1);
+        }
+        function tocarCrash() {
+            bata.triggerAttackRelease("A3", 1);
+        }
+        function bodyLoad() {
+
+            window.addEventListener("gamepadconnected", function (e) {
+                console.log("Gamepad connected at index %d: %s. %d buttons, %d axes");
+                console.log(e.gamepad)
+                loop()
+            });
+
+            Tone.Transport.scheduleRepeat(clockBeat, "16n");
+
+
+
+
+
+        }
+        var osc2, osc1, gain;
+
+        function crear2Osciladores() {
+            osc2 = new Tone.PulseOscillator(500, 0.5).start()
+            osc1 = new Tone.Oscillator(1, "sine").start()
+            gain = new Tone.Gain(0.5).connect(osc2.width)
+            osc2.toMaster();
+            osc1.connect(gain);
+
+        }
+        function notaSampler(nota, tiempo) {
+            sampler.triggerAttackRelease(nota, tiempo);
+            //lfo.sync()
+        }
+
+
+
+
+
+        ////FILTRO
+        var lowPass = new Tone.Filter(
+            {
+                "type": "lowpass",
+                "frequency": 0,
+                "q": 5,
+                "rolloff": -24,
+            }
+        ).toMaster();
+
+        //////LFO
+        var lfo = new Tone.LFO(0.01, 0, 3000).start();
+        lfo.connect(lowPass.frequency);
+
+        ////2 osciladores
+
+
+        ///// SAMPLER
+        var sampler = new Tone.Sampler({
+            "C3": "a.wav"
+        }, function () {
+            //sampler will repitch the closest sample
+            //    sampler.triggerAttack("D3")
+        }).connect(lowPass);
+
+
+        var bata = new Tone.Sampler({
+            "C3": "audios/bombo.wav",
+            "D3": "audios/redo.wav",
+            "E3": "audios/clap.wav",
+            "F3": "audios/hihatc.wav",
+            "G3": "audios/hihata.wav",
+            "A3": "audios/crash.wav",
+        }, () => {
+            // bombo.triggerAttack("D3")
+        }).connect(lowPass)
+
+        var synth = new Tone.FMSynth();
+
+
+
+
+        function melodia() {
+            //schedule a series of notes to play as soon as the page loads
+            sampler.triggerAttackRelease('C4', '4n', '8n')
+            sampler.triggerAttackRelease('E5', '8n', Tone.Time('4n') + Tone.Time('8n'))
+            sampler.triggerAttackRelease('G6', '16n', '2n')
+            sampler.triggerAttackRelease('B4', '16n', Tone.Time('2n') + Tone.Time('8t'))
+            sampler.triggerAttackRelease('G4', '16', Tone.Time('2n') + Tone.Time('8t') * 2)
+            sampler.triggerAttackRelease('E4', '2n', '0:3')
+        }
+
+
+
+        var x, y, bot1, bot2, bot3, bot4, x2, y2, l1, l2, r1, r2
+        var bot1_, bot2_, bot3_, bot4_, x2_, y2_, l1_, l2_, r1_, r2_
+
+        function loop() {
+            if (navigator.getGamepads()[cualJoystick].axes[0] != null && navigator.getGamepads()[cualJoystick].axes[0] != undefined) {
+                bot1 = navigator.getGamepads()[cualJoystick].buttons[0].pressed
+                bot2 = navigator.getGamepads()[cualJoystick].buttons[1].pressed
+                bot3 = navigator.getGamepads()[cualJoystick].buttons[2].pressed
+                bot4 = navigator.getGamepads()[cualJoystick].buttons[3].pressed
+
+
+                l1 = navigator.getGamepads()[cualJoystick].buttons[4].pressed
+                r1 = navigator.getGamepads()[cualJoystick].buttons[5].pressed
+                l2 = navigator.getGamepads()[cualJoystick].buttons[6].pressed
+                r2 = navigator.getGamepads()[cualJoystick].buttons[7].pressed
+
+
+                x = navigator.getGamepads()[cualJoystick].axes[0]
+                y = -navigator.getGamepads()[cualJoystick].axes[1]
+
+                x2 = navigator.getGamepads()[cualJoystick].axes[2]
+                y2 = -navigator.getGamepads()[cualJoystick].axes[2]
+                lowPass.frequency.input.value = document.getElementById("freq").value = x * 2000 - 150;
+
+                //  lowPass.Q.input.value=   document.getElementById("q").value = (y+1) *10;
+
+
+
+
+                //   queHaceCadaBoton()
+                mostrarEnConsoleBotones()
+
+
+
+            }
+            requestAnimationFrame(loop)
+        }
+        function bot2on() {
+            console.log("bot2")
+            //    notaSampler('G2', 5)
+            bata.triggerAttackRelease("C3", 1);
+        }
+
+
+        function bot1on() {
+            console.log("bot1")
+            //  notaSampler('C1', 5)
+            caja.triggerAttackRelease("C3", 1);
+        }
+
+
+        function botl1on() {
+            bata.triggerAttackRelease("C3", 1);
+
+        }
+        function botl2on() {
+
+        }
+        function botr1on() {
+            caja.triggerAttackRelease("C3", 1);
+        }
+        function botr2on() {
+
+        }
+        function bot4on() {
+            console.log("bot4")
+            try { notaSampler(((x2 + 1) * 150 + 30), 3) } catch (e) { }
+
+        }
+
+        function bot3on() {
+            console.log("bot3")
+            try { notaSampler(((y + 1) * 150 + 30), 3) } catch (e) { }
+
+        }
+        function mostrarEnConsoleBotones() {
+
+            //console.log(bot1_, bot1)
+
+
+
+            if (bot1 && !bot1_) bot1on()
+            if (bot2 && !bot2_) bot2on()
+            if (bot3 && !bot3_) bot3on()
+            if (bot4 && !bot4_) bot4on()
+            if (l1 && !l1_) botl1on()
+            if (l2 && !l2_) botl2on()
+            if (r1 && !r1_) botr1on()
+            if (r2 && !r2_) botr2on()
+
+
+            bot1_ = bot1;
+            bot2_ = bot2;
+            bot3_ = bot3;
+            bot4_ = bot4;
+            l1_ = l1
+            l2_ = l2;
+            r1_ = r1
+            r2_ = r2;
+
+
+
+
+        }
+
+
+    </script>
+
+
+
+</body>
+
+</html>
